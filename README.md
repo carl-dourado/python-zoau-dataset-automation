@@ -1,41 +1,52 @@
 # Python ZOAU Dataset Automation
 
-Converts a small IBM Z utility workflow from JCL/IEBCOPY into Python that can be
-called from USS, tested locally, and validated by the IBM Z Xplore `CHKJ2P1` job.
+Esse repo nasceu do desafio **J2P1 - JCL to Python** do IBM Z Xplore.
 
-The project is based on IBM Z Xplore labs around JCL, USS, datasets, PDS members,
-and the J2P1 "JCL to Python" challenge. IBM course PDFs are not redistributed
-here; this repo contains my implementation, notes, and reproducible local tests.
+A ideia era pegar um job JCL simples com `IEBCOPY` e fazer a mesma coisa em
+Python: copiar membros de um PDS de entrada para um PDS de saida.
 
-## What It Proves
+Eu ainda nao deixei isso 100% validado no mainframe porque meu acesso z/OS
+estava com senha expirada. Entao deixei duas partes:
 
-- Python running in USS
-- ZOAU `mvscmd.execute()` integration
-- JCL DD concepts translated into Python objects
-- IEBCOPY member copy from one PDS to another
-- CLI argument parsing for input dataset, output dataset, and member list
-- Error handling for missing datasets, bad members, and incompatible datasets
-- Local mock mode so the behavior can be reviewed without a mainframe login
+- scripts para rodar no USS quando o acesso estiver ok
+- modo mock local para testar a logica sem mainframe
 
-## Repository Layout
+## O que tem aqui
 
-```text
-.
-├── src/mainframe_dataset_automation/  # reusable package and CLI
-├── member_copy.py                     # IBM Z Xplore validator-compatible module
-├── copy_members.py                    # IBM Z Xplore validator-compatible CLI
-├── examples/mock_zos/                 # local PDS-like mock folders
-├── tests/                             # stdlib unittest suite
-└── docs/xplore-learning-map.md        # study notes mapped to project features
-```
+- `member_copy.py`: funcao principal que chama `IEBCOPY` via ZOAU
+- `copy_members.py`: CLI no formato que o job `CHKJ2P1` espera
+- `src/mainframe_dataset_automation`: versao mais organizada/testavel
+- `examples/mock_zos`: simulacao local de datasets usando pastas
+- `tests`: testes simples com `unittest`
+- `docs/xplore-learning-map.md`: notas ligando o projeto aos labs do Xplore
 
-## Run Locally Without z/OS
+## Por que fiz
 
-The local mode treats folders as PDS datasets and files as members.
+Eu queria um projeto de IBM Z que mostrasse mais do que "fiz curso".
+
+Esse aqui junta alguns pontos que apareceram nos PDFs/labs:
+
+- JCL
+- USS
+- datasets e PDS members
+- `IEBCOPY`
+- Python
+- ZOAU
+- tratamento de erro
+- validacao por job
+
+## Rodando local
+
+No Linux normal nao tem ZOAU nem datasets reais. Por isso existe o modo mock.
+
+Ele trata uma pasta como se fosse um dataset e cada arquivo dentro dela como se
+fosse um member.
 
 ```sh
 python -m unittest discover -s tests
+```
 
+```sh
 PYTHONPATH=src python -m mainframe_dataset_automation \
   copy \
   --mock-root examples/mock_zos \
@@ -46,33 +57,15 @@ PYTHONPATH=src python -m mainframe_dataset_automation \
   --json
 ```
 
-After running mock mode, copied members appear under:
+Depois disso, os members copiados aparecem aqui:
 
 ```text
 examples/mock_zos/Z49216.OUTPUT/
 ```
 
-## Run On IBM Z Xplore USS
+## Planejando a copia
 
-Copy these two root-level files to your USS home directory:
-
-- `member_copy.py`
-- `copy_members.py`
-
-Then run:
-
-```sh
-chmod 755 member_copy.py copy_members.py
-./copy_members.py -i ZXP.PUBLIC.J2PDATA -o "$USER.OUTPUT" -m MEMBER1 -m MEMBER6
-submit "//'ZXP.PUBLIC.JCL(CHKJ2P1)'"
-```
-
-`CHKJ2P1` expects `copy_members.py` in the USS home directory and validates that it
-uses `member_copy.py` to handle both successful and failing copy scenarios.
-
-## CLI Examples
-
-Plan the copy without executing it:
+Esse comando nao copia nada. Ele so mostra como ficaria o plano do `IEBCOPY`.
 
 ```sh
 PYTHONPATH=src python -m mainframe_dataset_automation plan \
@@ -82,26 +75,38 @@ PYTHONPATH=src python -m mainframe_dataset_automation plan \
   -m MEMBER6
 ```
 
-Check whether the current environment can import ZOAU:
+## Rodando no IBM Z Xplore
+
+Quando o acesso ao z/OS estiver funcionando, a parte importante e copiar estes
+dois arquivos para o home USS:
+
+- `member_copy.py`
+- `copy_members.py`
+
+No USS:
 
 ```sh
-PYTHONPATH=src python -m mainframe_dataset_automation doctor
+chmod 755 member_copy.py copy_members.py
+./copy_members.py -i ZXP.PUBLIC.J2PDATA -o "$USER.OUTPUT" -m MEMBER1 -m MEMBER6
 ```
 
-Use the package CLI on z/OS:
+Para validar pelo desafio:
 
 ```sh
-PYTHONPATH=src python -m mainframe_dataset_automation copy \
-  -i ZXP.PUBLIC.J2PDATA \
-  -o "$USER.OUTPUT" \
-  -m MEMBER1 \
-  -m MEMBER3 \
-  -m MEMBER6
+submit "//'ZXP.PUBLIC.JCL(CHKJ2P1)'"
 ```
 
-## Notes
+O job `CHKJ2P1` procura o `copy_members.py` no home USS e espera que ele use
+`member_copy.py`.
 
-The root-level `member_copy.py` and `copy_members.py` are intentionally small and
-self-contained because the Xplore validator looks for those exact files in the USS
-home directory. The package under `src/` is the cleaner, testable version for the
-portfolio and future extension.
+## O que falta
+
+- resetar/reativar minha senha z/OS
+- copiar os scripts para USS
+- rodar o `CHKJ2P1`
+- salvar o output da validacao no repo, se fizer sentido
+
+## Nota
+
+Nao coloquei PDF da IBM aqui. O repo tem so minha implementacao, exemplos locais
+e anotacoes.
