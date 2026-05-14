@@ -1,0 +1,3 @@
+DATASET=ZXP.PUBLIC.J2PDATA
+MEMBER=MEMBER6
+NOTE=mock member used by local tests

@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mainframe-dataset-automation"
+version = "0.1.0"
+description = "Python and ZOAU automation for copying PDS members with IEBCOPY."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "Carlos Dourado" }]
+license = { text = "MIT" }
+keywords = ["ibm-z", "zos", "zoau", "jcl", "iebcopy", "datasets"]
+
+[project.scripts]
+mainframe-dataset = "mainframe_dataset_automation.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
