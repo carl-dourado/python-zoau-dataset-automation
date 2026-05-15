@@ -1,100 +1,112 @@
-# Python TK5 IEBCOPY Dataset Automation
+ Mainframe Dataset Automation (Python + TK5)
 
-Pequena automação em Python relacionado a desafios específico que fiz no passado ao estudar sobre mainframes.
-O script tem como objetivo mostrar o fluxo mainframe mesmo, onde está rodando em umn Linux local, Hercules/TK5 e terminal 3270.
+  Automação em Python focada no fluxo de trabalho com IBM
+  Z Mainframes, simulando e gerando ativos para o ambiente
+  MVS/TK5 (Hercules).
 
-O foco atual do projeto é ser um ambiente disponivel: TK5/MVS 3.8j
-rodando localmente TSO, ISPF, JCL e utilitarios como `IEBCOPY`, mas nao roda Python moderno em
-USS nem ZOAU. Por isso o Python fica fora do mainframe, gerando plano/JCL,
-validando entradas, simulando datasets em pastas e mostrando exatamente qual
-job seria levado para o emulador.
+  Tech Stack: Python, JCL, IBM Z, Hercules/TK5, Linux,
+  Unittest, TN3270.
 
-## O que o projeto entrega
+  ---
 
-- Gera control cards de `IEBCOPY` para copiar membros de um PDS.
-- Gera JCL compativel com TK5/MVS para executar `IEBCOPY`.
-- Roda um mock local onde pastas representam datasets e arquivos representam
-  members.
-- Trata erros comuns, como member ausente, com mensagem legivel.
-- Mantem testes com `unittest`.
-- Mantem uma ponte ZOAU opcional para um z/OS USS real, mas isso nao e requisito
-  da demo TK5.
+  Contexto do Projeto
 
-## Rodando local
+  Esta automação surgiu de desafios práticos realizados
+  durante meus estudos sobre mainframes (IBM Z Xplore). O
+  script demonstra o fluxo real de integração entre um
+  Linux local, o emulador Hercules/TK5 e o terminal 3270.
 
-```sh
-PYTHONPATH=src python -m unittest discover -s tests
-```
+  Como o ambiente TK5 (MVS 3.8j) é uma versão clássica,
+  ele não suporta Python moderno nativamente. Por isso, a
+  solução utiliza o Python como uma ferramenta de suporte
+  externa que prepara o terreno para o Mainframe,
+  garantindo que os jobs sejam enviados sem erros de
+  sintaxe ou de lógica.
 
-```sh
-PYTHONPATH=src python -m mainframe_dataset_automation \
-  copy \
-  --mock-root examples/mock_zos \
-  -i ZXP.PUBLIC.J2PDATA \
-  -o Z49216.OUTPUT \
-  -m MEMBER1 \
-  -m MEMBER6 \
-  --json
-```
+  O Diferencial: Mock PDS System
 
-Depois disso, os members copiados aparecem em:
+  O ponto central deste projeto é o sistema de Mock PDS
+  (Partitioned Data Sets). Ele transforma pastas locais em
+  "Datasets" e arquivos em "Members". 
 
-```text
-examples/mock_zos/Z49216.OUTPUT/
-```
+  Isso permite:
+   1. Validar nomes e extensões antes de interagir com o
+      mainframe.
+   2. Testar a lógica de cópia localmente.
+   3. Simular erros de sistema (como o código de retorno
+      RC 12 de membro ausente) com mensagens legíveis para
+      o usuário.
 
-## Planejando a copia
+  ---
 
-```sh
-PYTHONPATH=src python -m mainframe_dataset_automation plan \
-  -i ZXP.PUBLIC.J2PDATA \
-  -o Z49216.OUTPUT \
-  -m MEMBER1 \
-  -m MEMBER6
-```
+  O que o projeto entrega
 
-## Gerando JCL para TK5
+   * Gerador de JCL: Cria automaticamente jobs compatíveis
+     com TK5/MVS para execução do utilitário IEBCOPY.
+   * Control Cards: Gera os cartões de controle (COPY
+     OUTDD... SELECT MEMBER...) dinamicamente.
+   * Mock Runner: Executa uma simulação de cópia no Linux,
+     espelhando o comportamento do mainframe.
+   * Doctor Tool: Ferramenta de diagnóstico para checar se
+     o ambiente local e as dependências estão prontas.
+   * Testes Automatizados: Cobertura de lógica de erro e
+     geração de strings usando unittest.
 
-```sh
-PYTHONPATH=src python -m mainframe_dataset_automation jcl \
-  -i ZXP.PUBLIC.J2PDATA \
-  -o Z49216.OUTPUT \
-  -m MEMBER1 \
-  -m MEMBER6 \
-  --job-name CPYJ2P1
-```
+  ---
 
-Saida esperada:
+  Como Rodar
 
-```jcl
-//CPYJ2P1  JOB (TK5),'IEBCOPY DEMO',CLASS=A,MSGCLASS=X,
-//             MSGLEVEL=(1,1)
-//COPY     EXEC PGM=IEBCOPY
-//SYSPRINT DD SYSOUT=*
-//INDS     DD DSN=ZXP.PUBLIC.J2PDATA,DISP=SHR
-//OUTDS    DD DSN=Z49216.OUTPUT,DISP=OLD
-//SYSIN    DD *
- COPY OUTDD=OUTDS,INDD=INDS
- SELECT MEMBER=(MEMBER1,MEMBER6)
-/*
-```
+  1. Testar a Lógica (Unittest)
+  PYTHONPATH=src python -m unittest discover -s tests
 
-No TK5, esse JCL depende de datasets reais existindo no catalogo do emulador.
-A demo do portfolio mostra a parte que cabe com seguranca no ambiente atual:
-geracao do plano, geracao do JCL, copia mock, erro esperado e testes.
+  2. Simular uma Cópia (Mock)
+  PYTHONPATH=src python -m mainframe_dataset_automation \
+    copy \
+    --mock-root examples/mock_zos \
+    -i ZXP.PUBLIC.J2PDATA \
+    -o Z49216.OUTPUT \
+    -m MEMBER1 \
+    -m MEMBER6 \
+    --json
 
-## Ambiente
+  3. Gerar JCL para o TK5
+  PYTHONPATH=src python -m mainframe_dataset_automation
+  jcl \
+    -i ZXP.PUBLIC.J2PDATA \
+    -o Z49216.OUTPUT \
+    -m MEMBER1 \
+    -m MEMBER6 \
+    --job-name CPYJ2P1
 
-```sh
-PYTHONPATH=src python -m mainframe_dataset_automation doctor
-```
+  ---
 
-O resultado local esperado diz que a demo TK5 esta disponivel e que ZOAU e
-opcional. Em um z/OS USS real com `zoautil_py`, a ponte ZOAU tambem pode ser
-usada.
+  Exemplo de Saída (JCL Gerado)
 
-## Sobre o nome do repo
+  O script gera o código abaixo, pronto para ser submetido
+  via leitor de cartões do Hercules:
 
-O nome original veio do estudo de ZOAU e do desafio J2P1 do IBM Z Xplore que fiz em meados de 2023/2024 na plataforma do IBM Z Xplorer. Essa versão
-atual foi ajustada pra mostrar o que se pode fazer com Hercules/TK5: JCL,
-IEBCOPY, PDS members, validação e automação Python ao redor do mainframe.
+  //CPYJ2P1  JOB (TK5),'IEBCOPY DEMO',CLASS=A,MSGCLASS=X,
+  //             MSGLEVEL=(1,1)
+  //COPY     EXEC PGM=IEBCOPY
+  //SYSPRINT DD SYSOUT=*
+  //INDS     DD DSN=ZXP.PUBLIC.J2PDATA,DISP=SHR
+  //OUTDS    DD DSN=Z49216.OUTPUT,DISP=OLD
+  //SYSIN    DD *
+   COPY OUTDD=OUTDS,INDD=INDS
+   SELECT MEMBER=(MEMBER1,MEMBER6)
+  /*
+
+  ---
+
+  Histórico e Aprendizado
+
+  O nome e a base do projeto vieram do estudo de ZOAU (Z
+  Open Automation Utilities) e do desafio J2P1 do IBM Z
+  Xplore. No entanto, para tornar o projeto acessível a
+  qualquer pessoa com um emulador Hercules, adaptei a
+  lógica para focar no que é essencial: JCL, IEBCOPY, PDS
+  Members e Automação.
+
+  Este laboratório demonstra minha capacidade de criar
+  pontes entre tecnologias modernas (Python/Linux) e
+  sistemas críticos de alta disponibilidade (IBM Z).
