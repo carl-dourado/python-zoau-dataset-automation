@@ -1,15 +1,15 @@
- Mainframe Dataset Automation (Python + TK5)
+ **Mainframe Dataset Automation (Python + TK5)**
 
   Automação em Python focada no fluxo de trabalho com IBM
   Z Mainframes, simulando e gerando ativos para o ambiente
   MVS/TK5 (Hercules).
 
-  Tech Stack: Python, JCL, IBM Z, Hercules/TK5, Linux,
+  **Tech Stack:** Python, JCL, IBM Z, Hercules/TK5, Linux,
   Unittest, TN3270.
 
   ---
 
-  Contexto do Projeto
+  **Contexto do Projeto**
 
   Esta automação surgiu de desafios práticos realizados
   durante meus estudos sobre mainframes (IBM Z Xplore). O
@@ -23,13 +23,13 @@
   garantindo que os jobs sejam enviados sem erros de
   sintaxe ou de lógica.
 
-  O Diferencial: Mock PDS System
+  **O Diferencial: Mock PDS System**
 
   O ponto central deste projeto é o sistema de Mock PDS
   (Partitioned Data Sets). Ele transforma pastas locais em
   "Datasets" e arquivos em "Members". 
 
-  Isso permite:
+  **Isso permite:**
    1. Validar nomes e extensões antes de interagir com o
       mainframe.
    2. Testar a lógica de cópia localmente.
@@ -39,27 +39,27 @@
 
   ---
 
-  O que o projeto entrega
+  **O que o projeto entrega**
 
-   * Gerador de JCL: Cria automaticamente jobs compatíveis
+   * **Gerador de JCL:** Cria automaticamente jobs compatíveis
      com TK5/MVS para execução do utilitário IEBCOPY.
-   * Control Cards: Gera os cartões de controle (COPY
+   * **Control Cards:** Gera os cartões de controle (COPY
      OUTDD... SELECT MEMBER...) dinamicamente.
-   * Mock Runner: Executa uma simulação de cópia no Linux,
+   * **Mock Runner:** Executa uma simulação de cópia no Linux,
      espelhando o comportamento do mainframe.
-   * Doctor Tool: Ferramenta de diagnóstico para checar se
+   * **Doctor Tool:** Ferramenta de diagnóstico para checar se
      o ambiente local e as dependências estão prontas.
-   * Testes Automatizados: Cobertura de lógica de erro e
+   * **Testes Automatizados:** Cobertura de lógica de erro e
      geração de strings usando unittest.
 
   ---
 
-  Como Rodar
+  **Como Rodar**
 
-  1. Testar a Lógica (Unittest)
+  **1. Testar a Lógica (Unittest)**
   PYTHONPATH=src python -m unittest discover -s tests
 
-  2. Simular uma Cópia (Mock)
+  **2. Simular uma Cópia (Mock)**
   PYTHONPATH=src python -m mainframe_dataset_automation \
     copy \
     --mock-root examples/mock_zos \
@@ -69,7 +69,7 @@
     -m MEMBER6 \
     --json
 
-  3. Gerar JCL para o TK5
+  **3. Gerar JCL para o TK5**
   PYTHONPATH=src python -m mainframe_dataset_automation
   jcl \
     -i ZXP.PUBLIC.J2PDATA \
@@ -80,7 +80,7 @@
 
   ---
 
-  Exemplo de Saída (JCL Gerado)
+  **Exemplo de Saída (JCL Gerado)**
 
   O script gera o código abaixo, pronto para ser submetido
   via leitor de cartões do Hercules:
@@ -98,7 +98,7 @@
 
   ---
 
-  Histórico e Aprendizado
+  **Histórico e Aprendizado**
 
   O nome e a base do projeto vieram do estudo de ZOAU (Z
   Open Automation Utilities) e do desafio J2P1 do IBM Z
