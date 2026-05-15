@@ -89,6 +89,4 @@ O script gera o código abaixo, pronto para ser submetido via leitor de cartões
 
 ## Histórico e Aprendizado
 
-O nome e a base do projeto vieram do estudo de ZOAU (Z Open Automation Utilities) e do desafio J2P1 do IBM Z Xplore. No entanto, para tornar o projeto acessível a qualquer pessoa com um emulador Hercules, adaptei a lógica para focar no que é essencial: JCL, IEBCOPY, PDS Members e Automação.
-
-Este laboratório demonstra minha capacidade de criar pontes entre tecnologias modernas (Python/Linux) e sistemas críticos de alta disponibilidade (IBM Z).
+O nome e a base do projeto vieram do estudo de ZOAU (Z Open Automation Utilities) e do desafio J2P1 do IBM Z Xplore que realizei em meados de 2024. Para tornar o projeto acessível a qualquer pessoa com um emulador Hercules, precisei adaptar a lógica para focar no que é essencial: JCL, IEBCOPY, PDS Members e Automação.
