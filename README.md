@@ -1,10 +1,10 @@
 # Python TK5 IEBCOPY Dataset Automation
 
-Automacao em Python para demonstrar copia de membros PDS com `IEBCOPY` em um
-fluxo que combina Linux local, Hercules/TK5 e terminal 3270.
+Pequena automação em Python relacionado a desafios específico que fiz no passado ao estudar sobre mainframes.
+O script tem como objetivo mostrar o fluxo mainframe mesmo, onde está rodando em umn Linux local, Hercules/TK5 e terminal 3270.
 
-O foco atual do projeto e ser honesto com o ambiente disponivel: TK5/MVS 3.8j
-roda TSO, ISPF, JCL e utilitarios como `IEBCOPY`, mas nao roda Python moderno em
+O foco atual do projeto é ser um ambiente disponivel: TK5/MVS 3.8j
+rodando localmente TSO, ISPF, JCL e utilitarios como `IEBCOPY`, mas nao roda Python moderno em
 USS nem ZOAU. Por isso o Python fica fora do mainframe, gerando plano/JCL,
 validando entradas, simulando datasets em pastas e mostrando exatamente qual
 job seria levado para o emulador.
@@ -83,7 +83,7 @@ No TK5, esse JCL depende de datasets reais existindo no catalogo do emulador.
 A demo do portfolio mostra a parte que cabe com seguranca no ambiente atual:
 geracao do plano, geracao do JCL, copia mock, erro esperado e testes.
 
-## Checando o ambiente
+## Ambiente
 
 ```sh
 PYTHONPATH=src python -m mainframe_dataset_automation doctor
@@ -95,6 +95,6 @@ usada.
 
 ## Sobre o nome do repo
 
-O nome original veio do estudo de ZOAU e do desafio J2P1 do IBM Z Xplore. A
-versao atual foi ajustada para o que da para demonstrar com Hercules/TK5: JCL,
-IEBCOPY, PDS members, validacao e automacao Python ao redor do mainframe.
+O nome original veio do estudo de ZOAU e do desafio J2P1 do IBM Z Xplore que fiz em meados de 2023/2024 na plataforma do IBM Z Xplorer. Essa versão
+atual foi ajustada pra mostrar o que se pode fazer com Hercules/TK5: JCL,
+IEBCOPY, PDS members, validação e automação Python ao redor do mainframe.
