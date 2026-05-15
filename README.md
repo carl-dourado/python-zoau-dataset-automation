@@ -1,49 +1,29 @@
-# Python ZOAU Dataset Automation
+# Python TK5 IEBCOPY Dataset Automation
 
-Esse repo nasceu do desafio **J2P1 - JCL to Python** do IBM Z Xplore.
+Automacao em Python para demonstrar copia de membros PDS com `IEBCOPY` em um
+fluxo que combina Linux local, Hercules/TK5 e terminal 3270.
 
-A ideia era pegar um job JCL simples com `IEBCOPY` e fazer a mesma coisa em
-Python: copiar membros de um PDS de entrada para um PDS de saida.
+O foco atual do projeto e ser honesto com o ambiente disponivel: TK5/MVS 3.8j
+roda TSO, ISPF, JCL e utilitarios como `IEBCOPY`, mas nao roda Python moderno em
+USS nem ZOAU. Por isso o Python fica fora do mainframe, gerando plano/JCL,
+validando entradas, simulando datasets em pastas e mostrando exatamente qual
+job seria levado para o emulador.
 
-Eu ainda nao deixei isso 100% validado no mainframe porque meu acesso z/OS
-estava com senha expirada. Entao deixei duas partes:
+## O que o projeto entrega
 
-- scripts para rodar no USS quando o acesso estiver ok
-- modo mock local para testar a logica sem mainframe
-
-## O que tem aqui
-
-- `member_copy.py`: funcao principal que chama `IEBCOPY` via ZOAU
-- `copy_members.py`: CLI no formato que o job `CHKJ2P1` espera
-- `src/mainframe_dataset_automation`: versao mais organizada/testavel
-- `examples/mock_zos`: simulacao local de datasets usando pastas
-- `tests`: testes simples com `unittest`
-- `docs/xplore-learning-map.md`: notas ligando o projeto aos labs do Xplore
-
-## Por que fiz
-
-Eu queria um projeto de IBM Z que mostrasse mais do que "fiz curso".
-
-Esse aqui junta alguns pontos que apareceram nos PDFs/labs:
-
-- JCL
-- USS
-- datasets e PDS members
-- `IEBCOPY`
-- Python
-- ZOAU
-- tratamento de erro
-- validacao por job
+- Gera control cards de `IEBCOPY` para copiar membros de um PDS.
+- Gera JCL compativel com TK5/MVS para executar `IEBCOPY`.
+- Roda um mock local onde pastas representam datasets e arquivos representam
+  members.
+- Trata erros comuns, como member ausente, com mensagem legivel.
+- Mantem testes com `unittest`.
+- Mantem uma ponte ZOAU opcional para um z/OS USS real, mas isso nao e requisito
+  da demo TK5.
 
 ## Rodando local
 
-No Linux normal nao tem ZOAU nem datasets reais. Por isso existe o modo mock.
-
-Ele trata uma pasta como se fosse um dataset e cada arquivo dentro dela como se
-fosse um member.
-
 ```sh
-python -m unittest discover -s tests
+PYTHONPATH=src python -m unittest discover -s tests
 ```
 
 ```sh
@@ -57,15 +37,13 @@ PYTHONPATH=src python -m mainframe_dataset_automation \
   --json
 ```
 
-Depois disso, os members copiados aparecem aqui:
+Depois disso, os members copiados aparecem em:
 
 ```text
 examples/mock_zos/Z49216.OUTPUT/
 ```
 
 ## Planejando a copia
-
-Esse comando nao copia nada. Ele so mostra como ficaria o plano do `IEBCOPY`.
 
 ```sh
 PYTHONPATH=src python -m mainframe_dataset_automation plan \
@@ -75,38 +53,48 @@ PYTHONPATH=src python -m mainframe_dataset_automation plan \
   -m MEMBER6
 ```
 
-## Rodando no IBM Z Xplore
-
-Quando o acesso ao z/OS estiver funcionando, a parte importante e copiar estes
-dois arquivos para o home USS:
-
-- `member_copy.py`
-- `copy_members.py`
-
-No USS:
+## Gerando JCL para TK5
 
 ```sh
-chmod 755 member_copy.py copy_members.py
-./copy_members.py -i ZXP.PUBLIC.J2PDATA -o "$USER.OUTPUT" -m MEMBER1 -m MEMBER6
+PYTHONPATH=src python -m mainframe_dataset_automation jcl \
+  -i ZXP.PUBLIC.J2PDATA \
+  -o Z49216.OUTPUT \
+  -m MEMBER1 \
+  -m MEMBER6 \
+  --job-name CPYJ2P1
 ```
 
-Para validar pelo desafio:
+Saida esperada:
+
+```jcl
+//CPYJ2P1  JOB (TK5),'IEBCOPY DEMO',CLASS=A,MSGCLASS=X,
+//             MSGLEVEL=(1,1)
+//COPY     EXEC PGM=IEBCOPY
+//SYSPRINT DD SYSOUT=*
+//INDS     DD DSN=ZXP.PUBLIC.J2PDATA,DISP=SHR
+//OUTDS    DD DSN=Z49216.OUTPUT,DISP=OLD
+//SYSIN    DD *
+ COPY OUTDD=OUTDS,INDD=INDS
+ SELECT MEMBER=(MEMBER1,MEMBER6)
+/*
+```
+
+No TK5, esse JCL depende de datasets reais existindo no catalogo do emulador.
+A demo do portfolio mostra a parte que cabe com seguranca no ambiente atual:
+geracao do plano, geracao do JCL, copia mock, erro esperado e testes.
+
+## Checando o ambiente
 
 ```sh
-submit "//'ZXP.PUBLIC.JCL(CHKJ2P1)'"
+PYTHONPATH=src python -m mainframe_dataset_automation doctor
 ```
 
-O job `CHKJ2P1` procura o `copy_members.py` no home USS e espera que ele use
-`member_copy.py`.
+O resultado local esperado diz que a demo TK5 esta disponivel e que ZOAU e
+opcional. Em um z/OS USS real com `zoautil_py`, a ponte ZOAU tambem pode ser
+usada.
 
-## O que falta
+## Sobre o nome do repo
 
-- resetar/reativar minha senha z/OS
-- copiar os scripts para USS
-- rodar o `CHKJ2P1`
-- salvar o output da validacao no repo, se fizer sentido
-
-## Nota
-
-Nao coloquei PDF da IBM aqui. O repo tem so minha implementacao, exemplos locais
-e anotacoes.
+O nome original veio do estudo de ZOAU e do desafio J2P1 do IBM Z Xplore. A
+versao atual foi ajustada para o que da para demonstrar com Hercules/TK5: JCL,
+IEBCOPY, PDS members, validacao e automacao Python ao redor do mainframe.

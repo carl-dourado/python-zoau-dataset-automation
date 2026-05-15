@@ -8,6 +8,7 @@ from typing import Iterable
 
 DATASET_RE = re.compile(r"^[A-Z#$@][A-Z0-9#$@-]{0,7}(?:\.[A-Z#$@][A-Z0-9#$@-]{0,7})*$")
 MEMBER_RE = re.compile(r"^[A-Z#$@][A-Z0-9#$@]{0,7}$")
+JOB_NAME_RE = re.compile(r"^[A-Z#$@][A-Z0-9#$@]{0,7}$")
 
 
 class ValidationError(ValueError):
@@ -88,6 +89,25 @@ def build_iebcopy_control_cards(members: Iterable[str]) -> list[str]:
         " COPY OUTDD=OUTDS,INDD=INDS",
         f" SELECT MEMBER=({member_string})",
     ]
+
+
+def build_tk5_iebcopy_jcl(request: CopyRequest, job_name: str = "CPYMEM") -> str:
+    normalized_job_name = normalize_member(job_name)
+    if not JOB_NAME_RE.match(normalized_job_name):
+        raise ValidationError(f"Invalid TK5 job name: {job_name}")
+
+    lines = [
+        f"//{normalized_job_name:<8} JOB (TK5),'IEBCOPY DEMO',CLASS=A,MSGCLASS=X,",
+        "//             MSGLEVEL=(1,1)",
+        "//COPY     EXEC PGM=IEBCOPY",
+        "//SYSPRINT DD SYSOUT=*",
+        f"//INDS     DD DSN={request.input_dataset},DISP=SHR",
+        f"//OUTDS    DD DSN={request.output_dataset},DISP=OLD",
+        "//SYSIN    DD *",
+        *build_iebcopy_control_cards(request.members),
+        "/*",
+    ]
+    return "\n".join(lines) + "\n"
 
 
 def dataset_to_mock_path(root: Path, dataset_name: str) -> Path:

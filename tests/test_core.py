@@ -4,6 +4,7 @@ from mainframe_dataset_automation.core import (
     CopyRequest,
     ValidationError,
     build_iebcopy_control_cards,
+    build_tk5_iebcopy_jcl,
 )
 
 
@@ -24,6 +25,17 @@ class CoreTests(unittest.TestCase):
             build_iebcopy_control_cards(["member1", "member6"]),
             [" COPY OUTDD=OUTDS,INDD=INDS", " SELECT MEMBER=(MEMBER1,MEMBER6)"],
         )
+
+    def test_tk5_jcl_contains_dataset_dds_and_control_cards(self):
+        request = CopyRequest.from_values("ZXP.PUBLIC.J2PDATA", "Z49216.OUTPUT", ["MEMBER1", "MEMBER6"])
+
+        jcl = build_tk5_iebcopy_jcl(request, "cpyj2p1")
+
+        self.assertIn("//CPYJ2P1  JOB (TK5),'IEBCOPY DEMO'", jcl)
+        self.assertIn("//COPY     EXEC PGM=IEBCOPY", jcl)
+        self.assertIn("//INDS     DD DSN=ZXP.PUBLIC.J2PDATA,DISP=SHR", jcl)
+        self.assertIn("//OUTDS    DD DSN=Z49216.OUTPUT,DISP=OLD", jcl)
+        self.assertIn(" SELECT MEMBER=(MEMBER1,MEMBER6)", jcl)
 
 
 if __name__ == "__main__":
